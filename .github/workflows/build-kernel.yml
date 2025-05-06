@@ -31,7 +31,7 @@ jobs:
           make -j$(nproc) ARCH=arm64
 
       - name: Upload kernel build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: kernel-build
           path: linux-5.4.291/arch/arm64/boot/Image
