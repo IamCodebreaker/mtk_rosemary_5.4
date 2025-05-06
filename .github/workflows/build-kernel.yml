@@ -10,8 +10,16 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
+      - name: Print runner environment info
+        run: |
+          echo "Runner OS: $RUNNER_OS"
+          echo "Runner Temp: $RUNNER_TEMP"
+          echo "Runner Workspace: $RUNNER_WORKSPACE"
+          uname -a
+          curl -v https://github.com
+
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -31,7 +39,7 @@ jobs:
           make -j$(nproc) ARCH=arm64
 
       - name: Upload kernel build artifacts
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v2
         with:
           name: kernel-build
           path: linux-5.4.291/arch/arm64/boot/Image
