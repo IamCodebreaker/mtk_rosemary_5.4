@@ -1,0 +1,37 @@
+name: Build MTK Rosemary Kernel 5.4.291
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev bc
+
+      - name: Configure kernel
+        run: |
+          cd linux-5.4.291
+          make ARCH=arm64 rosemary_defconfig
+
+      - name: Build kernel
+        run: |
+          cd linux-5.4.291
+          make -j$(nproc) ARCH=arm64
+
+      - name: Upload kernel build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: kernel-build
+          path: linux-5.4.291/arch/arm64/boot/Image
