@@ -1,45 +1,92 @@
-name: Build MTK Rosemary Kernel 5.4.291
+name: Kernel Build 5.4
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      KERNEL_REPO:
+        description: 'Kernel repository URL'
+        required: true
+        default: 'https://github.com/mtk-rosemary/linux-5.4.291'
+      KERNEL_BRANCH:
+        description: 'Kernel branch'
+        required: true
+        default: 'main'
+      KERNEL_DEFCONFIG:
+        description: 'Kernel defconfig'
+        required: true
+        default: 'rosemary_defconfig'
+      KSUNEXT_VERSION:
+        description: 'KSUNEXT version'
+        required: true
+        default: 'v1.0.2-R12'
+      KERNEL_HOTFIX:
+        description: 'Kernel hotfix notes'
+        required: false
+        default: 'N/A'
 
 jobs:
   build:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     steps:
-      - name: Print runner environment info
+      - name: Prepare environment
         run: |
-          echo "Runner OS: $RUNNER_OS"
-          echo "Runner Temp: $RUNNER_TEMP"
-          echo "Runner Workspace: $RUNNER_WORKSPACE"
-          uname -a
-          curl -v https://github.com
+          sudo apt update -qq
+          sudo apt install -y gawk aria2 git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libxml2-utils bzip2 libbz2-dev libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python2 python3 -qq
 
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install dependencies
+      - name: Prepare Clang toolchain
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev bc
+          mkdir -p $GITHUB_WORKSPACE/project/clang
+          CLANG_URL=$(curl -Ls https://raw.githubusercontent.com/ZyCromerZ/Clang/main/Clang-main-link.txt)
+          aria2c $CLANG_URL -q -d $GITHUB_WORKSPACE/project/clang -o clang.tar.gz
+          tar -xf $GITHUB_WORKSPACE/project/clang/clang.tar.gz -C $GITHUB_WORKSPACE/project/clang --strip-components=1
 
-      - name: Configure kernel
+      - name: Clone kernel source
         run: |
-          cd linux-5.4.291
-          make ARCH=arm64 rosemary_defconfig
+          mkdir -p $GITHUB_WORKSPACE/project
+          cd $GITHUB_WORKSPACE/project
+          git clone -b ${{ github.event.inputs.KERNEL_BRANCH }} --depth=1 ${{ github.event.inputs.KERNEL_REPO }} linux
+
+      - name: Clone AnyKernel3
+        run: |
+          cd $GITHUB_WORKSPACE/project
+          git clone --depth=1 https://github.com/rifsxd/AnyKernel3 AnyKernel3
 
       - name: Build kernel
         run: |
-          cd linux-5.4.291
-          make -j$(nproc) ARCH=arm64
+          cd $GITHUB_WORKSPACE/project/linux
+          export PATH=$GITHUB_WORKSPACE/project/clang/bin:$PATH
+          export TZ="Asia/Jakarta"
+          export DATE=$(date "+%Y%m%d-%H%M")
+          echo "BUILD_DATE=$(date "+%Y%m%d%H%M")" >> $GITHUB_ENV
+          echo "KERNEL_VER=$(make kernelversion)" >> $GITHUB_ENV
+          echo "CLANG_VER=$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g')" >> $GITHUB_ENV
+          export ARCH=arm64
+          export KBUILD_BUILD_HOST=builder
+          export KBUILD_BUILD_USER=github-actions
+          export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
+          make O=out ARCH=$ARCH ${{ github.event.inputs.KERNEL_DEFCONFIG }}
+          make -j$(nproc) O=out CC=clang ARCH=$ARCH CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- LLVM=1 LLVM_IAS=1 LD=ld.lld NM=llvm-nm AR=llvm-ar OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump
 
-      - name: Upload kernel build artifacts
-        uses: actions/upload-artifact@v2
+      - name: Prepare AnyKernel3 package
+        run: |
+          cd $GITHUB_WORKSPACE/project/AnyKernel3
+          cp $GITHUB_WORKSPACE/project/linux/out/arch/arm64/boot/Image.gz Image.gz
+          zip -r9 $GITHUB_WORKSPACE/project/Kernel5.4.zip -- *
+
+      - name: Upload release
+        uses: softprops/action-gh-release@v1
         with:
-          name: kernel-build
-          path: linux-5.4.291/arch/arm64/boot/Image
+          files: ${{ github.workspace }}/project/Kernel5.4.zip
+          name: Kernel5.4-${{ env.BUILD_DATE }}
+          tag_name: ${{ env.BUILD_DATE }}
+          body: |
+            Repo: ${{ github.event.inputs.KERNEL_REPO }}
+            Branch: ${{ github.event.inputs.KERNEL_BRANCH }}
+            Config: ${{ github.event.inputs.KERNEL_DEFCONFIG }}
+            Hotfix: ${{ github.event.inputs.KERNEL_HOTFIX }}
+            Kernel Ver: ${{ env.KERNEL_VER }}
+            Clang Ver: ${{ env.CLANG_VER }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
