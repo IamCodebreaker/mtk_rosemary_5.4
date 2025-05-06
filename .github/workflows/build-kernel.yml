@@ -6,7 +6,7 @@ on:
       KERNEL_REPO:
         description: 'Kernel repository URL'
         required: true
-        default: 'https://github.com/mtk-rosemary/linux-5.4.291'
+        default: 'https://github.com/IamCodebreaker/mtk_rosemary_5.4.git'
       KERNEL_BRANCH:
         description: 'Kernel branch'
         required: true
