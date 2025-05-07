@@ -46,7 +46,7 @@ jobs:
         run: |
           mkdir -p $GITHUB_WORKSPACE/project
           cd $GITHUB_WORKSPACE/project
-          git clone -b ${{ github.event.inputs.KERNEL_BRANCH }} --depth=1 ${{ github.event.inputs.KERNEL_REPO }} linux
+          git clone -b ${{ github.event.inputs.KERNEL_BRANCH }} --depth=1 https://${{ secrets.GITHUB_TOKEN }}@github.com/IamCodebreaker/mtk_rosemary_5.4.git linux
 
       - name: Clone AnyKernel3
         run: |
