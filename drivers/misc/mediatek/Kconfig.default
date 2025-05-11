@@ -93,6 +93,7 @@ config ANDROID_DEFAULT_SETTING
 	select IP_NF_ARP_MANGLE
 	select IP_NF_ARPTABLES
 	select IP_NF_FILTER
+	select IP_NF_IPTABLES
 	select IP_NF_MANGLE
 	select IP_NF_MATCH_ECN
 	select IP_NF_MATCH_TTL
@@ -245,8 +246,9 @@ config ANDROID_DEFAULT_SETTING
 	select UNIX
 	select UNMAP_KERNEL_AT_EL0 if ARM64
 	select USB
-	select USB_CONFIGFS_F_MTP
-	select USB_CONFIGFS_F_PTP
+	select USB_CONFIGFS
+	select USB_CONFIGFS_F_ACC
+	select USB_CONFIGFS_F_AUDIO_SRC
 	select USB_CONFIGFS_F_FS
 	select USB_CONFIGFS_F_MIDI
 	select USB_CONFIGFS_UEVENT
@@ -322,6 +324,7 @@ config MTK_ANDROID_DEFAULT_SETTING
 	select INET_AH
 	select INET_IPCOMP
 	select INET_SCTP_DIAG
+	select INET_TCP_DIAG
 	select INET_TUNNEL
 	select IP6_NF_MATCH_FRAG
 	select IP6_NF_MATCH_IPV6HEADER
@@ -331,6 +334,11 @@ config MTK_ANDROID_DEFAULT_SETTING
 	select IP_NF_MATCH_AH
 	select IP_PIMSM_V1
 	select IP_PIMSM_V2
+	select IP_PNP
+	select IP_PNP_BOOTP
+	select IP_PNP_DHCP
+	select IP_ROUTE_CLASSID
+	select IP_SCTP
 	select IPV6_MROUTE
 	select IPV6_NDISC_NODETYPE
 	select IPV6_PIMSM_V2
@@ -392,148 +400,62 @@ config MTK_ANDROID_DEFAULT_SETTING
 	select NETFILTER_XT_TARGET_NETMAP
 	select NETFILTER_XT_TARGET_NFLOG
 	select NETFILTER_XT_TARGET_REDIRECT
-	select NETFILTER_XT_TARGET_NFQUEUE
-	select NETFILTER_XT_TARGET_SECMARK
-	select NETFILTER_XT_TARGET_TCPMSS
-	select NETFILTER_XT_TARGET_TPROXY
-	select NETFILTER_XT_TARGET_TRACE
-	select NET_IPGRE_DEMUX
-	select NET_IPVTI
-	select NET_KEY
-	select NET_NS
-	select NET_SCHED
-	select NET_SCH_HTB
+	select NET_IPIP
+	select NET_IP_TUNNEL
+	select NET_SCH_FIFO
 	select NET_SCH_INGRESS
-	select NF_CONNTRACK
-	select NF_CONNTRACK_AMANDA
-	select NF_CONNTRACK_EVENTS
-	select NF_CONNTRACK_FTP
-	select NF_CONNTRACK_H323
-	select NF_CONNTRACK_IRC
-	select NF_CONNTRACK_NETBIOS_NS
-	select NF_CONNTRACK_PPTP
-	select NF_CONNTRACK_SANE
-	select NF_CONNTRACK_SECMARK
-	select NF_CONNTRACK_TFTP
-	select NF_CT_NETLINK
-	select NF_CT_PROTO_DCCP
-	select NF_CT_PROTO_SCTP
-	select NF_CT_PROTO_UDPLITE
+	select NETWORK_SECMARK
+	select NF_CONNTRACK_BROADCAST
+	select NF_CONNTRACK_IPV4
+	select NF_CONNTRACK_IPV6
+	select NF_CONNTRACK_MARK
+	select NF_CT_PROTO_GRE
+	select NF_DEFRAG_IPV4
+	select NF_DEFRAG_IPV6
 	select NF_NAT
-	select NF_SOCKET_IPV4
-	select NF_SOCKET_IPV6
-	select NO_HZ
-	select PACKET
-	select PLAYSTATION_FF
-	select PM_WAKELOCKS
-	select POSIX_TIMERS
-	select PPP
-	select PPP_BSDCOMP
-	select PPP_DEFLATE
-	select PPP_MPPE
-	select PPPOL2TP
-	select PPTP
-	select PREEMPT
-	select PROCESS_RECLAIM
-	select PROC_FS
-	select PROFILING
-	select PSI
-	select QFMT_V2
-	select QUOTA
-	select QUOTACTL
-	select RTC_CLASS
-	select SCHED_DEBUG
-	select SECCOMP
-	select SECCOMP_FILTER
-	select SECURITY
-	select SECURITY_NETWORK
-	select SECURITY_PERF_EVENTS_RESTRICT
-	select SECURITY_SELINUX
-	select SETEND_EMULATION if ARM64
-	select SHMEM
-	select SIGNALFD
-	select SND
-	select SOUND
-	select STACKPROTECTOR
-	select STACKPROTECTOR_STRONG
-	select STAGING
-	select STRICT_KERNEL_RWX
-	select STRICT_MODULE_RWX
-	select SUSPEND
-	select SWP_EMULATION if ARM64
-	select SYNC_FILE
-	select SYSFS
-	select TASK_IO_ACCOUNTING
-	select TASKSTATS
-	select TASK_XACCT
-	select TIMERFD
-	select TTY
-	select TUN
-	select UHID
-	select UID_SYS_STATS
-	select UNICODE
-	select UNIX
-	select UNMAP_KERNEL_AT_EL0 if ARM64
-	select USB
+	select NF_NAT_AMANDA
+	select NF_NAT_FTP
+	select NF_NAT_H323
+	select NF_NAT_IPV4
+	select NF_NAT_IPV6
+	select NF_NAT_IRC
+	select NF_NAT_MASQUERADE_IPV4
+	select NF_NAT_PPTP
+	select NF_NAT_PROTO_DCCP
+	select NF_NAT_PROTO_GRE
+	select NF_NAT_PROTO_SCTP
+	select NF_NAT_PROTO_UDPLITE
+	select NF_NAT_REDIRECT
+	select NF_NAT_TFTP
+	select NF_REJECT_IPV4
+	select NF_REJECT_IPV6
+	select PGTABLE_MAPPING if ZSMALLOC && (ARM || ARM64)
+	select PRINTK_MTK
+	select PRINTK_MTK_UART_CONSOLE if PRINTK_MTK
+	select PRINTK_PREFIX_ENHANCE if PRINTK
+	select REGULATOR
+	select SOCK_CGROUP_DATA
+	select SPECULATIVE_PAGE_FAULT if (ARCH_SUPPORTS_SPECULATIVE_PAGE_FAULT && ARCH_HAS_PTE_SPECIAL && MMU && SMP)
+	select STP
+	select SYNC
+	select POWER_RESET
+	select SYSCON_REBOOT_MODE
+	select TCP_CONG_ADVANCED
+	select TCP_CONG_BIC
+	select TMPFS
 	select USB_CONFIGFS_F_MTP
 	select USB_CONFIGFS_F_PTP
-	select USB_CONFIGFS_F_FS
-	select USB_CONFIGFS_F_MIDI
-	select USB_CONFIGFS_UEVENT
-	select USB_GADGET
-	select USB_SUPPORT
-	select UTS_NS
-	select VETH
-	select XFRM_INTERFACE
-	select XFRM_STATISTICS
-	select XFRM_USER
+	select WEXT_PRIV
+	select WEXT_PROC
+	select WIRELESS
+	select WIRELESS_EXT
+	select XFRM
+	select XFRM_ALGO
+	select XFRM_IPCOMP
+	select XFRM_SUB_POLICY
+	select MTK_SOCINFO
 	help
-	  This option enables the android base config by default which
-	  definded in android-base.config and android-base-conditional.xml
-	  Say Y here if the project is for android product.
+	  This adds some MTK specific config by default which is
+	  not defined in ANDROID_DEFAULT_SETTING.
+	  Say Y here for MTK android product (e.g. smart phone)
 	  If unsure, say N.
-
-config MTK_ANDROID_DEFAULT_SETTING
-	bool "Select MTK android common setting by default"
-	select ARM_MTK_CPUIDLE if (!ARM_MTK_NEW_ARCH_CPUIDLE && !CPU_IDLE_NO_MTK)
-	select BRIDGE
-	select BRIDGE_NETFILTER
-	select CONSOLE_LOCK_DURATION_DETECT if MTK_ENG_BUILD
-	select CRYPTO
-	select CRYPTO_ABLK_HELPER
-	select CRYPTO_AEAD
-	select CRYPTO_AEAD2
-	select CRYPTO_AKCIPHER2
-	select CRYPTO_ALGAPI
-	select CRYPTO_ALGAPI2
-	select CRYPTO_ARC4
-	select CRYPTO_AUTHENC
-	select CRYPTO_BLKCIPHER
-	select CRYPTO_BLKCIPHER2
-	select CRYPTO_BLOWFISH
-	select CRYPTO_CCM
-	select CRYPTO_CMAC
-	select CRYPTO_CRC32C
-	select CRYPTO_CRYPTD
-	select CRYPTO_CTR
-	select CRYPTO_DEFLATE
-	select CRYPTO_DES
-	select CRYPTO_DRBG
-	select CRYPTO_DRBG_MENU
-	select CRYPTO_ECHAINIV
-	select CRYPTO_HASH
-	select CRYPTO_HASH2
-	select CRYPTO_JITTERENTROPY
-	select CRYPTO_LZ4
-	select CRYPTO_LZO
-	select CRYPTO_MANAGER
-	select CRYPTO_MANAGER2
-	select CRYPTO_NULL2
-	select CRYPTO_RNG
-	select CRYPTO_RNG2
-	select CRYPTO_RNG_DEFAULT
-	select CRYPTO_SEQIV
-	select CRYPTO_TWOFISH_COMMON
-	select CRYPTO_USER
-	select CRYPTO_WORKQUEUE
-	select CRYPTO_XCBC
